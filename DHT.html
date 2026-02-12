@@ -71,11 +71,4 @@ void loop() {
   Serial.println("----------------------");
 }
 
-// Функция для расчета точки росы
-double dewPoint(double temp, double hum) {
-  double a = 17.27;
-  double b = 237.7;
-  double gamma = ((a * temp) / (b + temp)) + log(hum / 100.0);
-  double dp = (b * gamma) / (a - gamma);
-  return dp;
 }
