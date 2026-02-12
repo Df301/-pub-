@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h> 
+
+// Определение измерительных портов:
+int  LinePwr;      // Используется для отображения строки мощности
+
+float pwr,pwrF,pwrR,forw,rev,maxpwr;
+float Kf = 5.66;            // коэфф расчета мощности
+float SWR = 0;
+unsigned long TM;    // TimeMark - метка времени
+
+//const float Zx = 75;    //... Расчеты  под 75-омный кабель
+const float Zx = 50;    //... Расчеты  под 50-омный кабель
+
+LiquidCrystal_I2C lcd(0x27,16,2);  // for blue china LCD
+// set the LCD address to 0x20 for a 16 chars and 2 line display
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  lcd.init();
+  // вывод первоначальной заставки
+  lcd.setCursor(1, 0);
+  lcd.backlight();
+  lcd.print("SWR & PWR meter");
+  //lcd.setCursor(0, 1);
+  //lcd.print(" (c) R7YZ 2021 ");  
+  delay(+2000);
+  lcd.clear();
+}
+
+
+void loop()
+{  
+  // Print a message to the LCD.
+  lcd.setCursor(0, 0);   
+  lcd.print("P= ");
+   
+  forw = analogRead(A2);         // читаю значение напряжения FORW:
+  rev =  analogRead(A3);         // читаю значение напряжения REV: 
+  pwrF = forw *forw * Kf / Zx;    // расчет значения мощности Forward
+  pwrR =  rev *rev * Kf / Zx;     // расчет значения мощности Reward  
+  pwr= pwrF-pwrR;                // мощность за минусом отраженной..
+  if ((pwr > 0) )             // - Есть ток в антенне - Режим передачи
+  {                                   
+    if(pwr > maxpwr) {maxpwr = pwr;}    // запомним последнее Max значение
+    LinePwr = map(maxpwr, 0, 160, 0, 16);  // калибровка  на строку 160 wt  0-16 символов
+    if (pwr >160)
+    {  
+       LinePwr = map(maxpwr, 0, 1000, 0, 16);  // калибровка  на строку 1000 wt  ...
+    }
+    LinePwr = constrain(LinePwr, 0, 16);  // ограничение диапазона MAX MIN
+    lcd.print((int)maxpwr);                // вывод значения мощности
+    lcd.print("w   ");
+  
+    // Serial.print("maxpwr = ");    
+    // Serial.println(maxpwr); 
+  
+    float voltF = forw/1023*5;
+    float voltR =  rev/1023*5; 
+
+    SWR = (voltF + voltR)/(voltF - voltR); 
+    
+    // первая строка 
+    lcd.setCursor(8, 0);
+    lcd.print("SWR=");
+    lcd.print(SWR);
+    
+    // вторая строка
+    lcd.setCursor(0, 1);
+    lcd.print("                ");           
+    lcd.setCursor(0, 1);
+  
+    // строка показания мощности
+    for (int j=0; j < LinePwr; j++)   {  lcd.print(char(0xFF)); }
+
+    //  delayMicroseconds(200);     //  200 микросекунд, чтоб не моргало в режиме CW 
+    TM = millis();                // засечка времени измерения
+  }
+ 
+ else  { maxpwr =0;}
+   
+ if ((millis() > (TM +1000))  &&   (pwr < 1))
+  {  // ---ЕСЛИ НЕТ НАПРЯЖЕНИЯ ОТ ДАТЧИКОВ  - значит это -- Режим приема RX  -------
+     //  .. и прошло более 1000 мсек 
+
+      lcd.setCursor(0, 0);
+      lcd.print("     RX MODE    ");
+      lcd.setCursor(0, 1); 
+      lcd.print("W=0 or NO Antenna");
+   }
+ delay(50);
+
+}

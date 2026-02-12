@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+#include <DHT.h>
+
+// Определяем пин и тип датчика
+#define DHTPIN 2      // Пин, к которому подключен датчик
+#define DHTTYPE DHT11 // Тип датчика - DHT11
+
+// Создаем объект датчика
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  // Инициализация последовательного порта для вывода данных
+  Serial.begin(9600);
+  
+  // Инициализация датчика DHT11
+  dht.begin();
+  
+  // Небольшая задержка для стабилизации датчика
+  delay(1000);
+  
+  Serial.println("Система мониторинга DHT11");
+  Serial.println("=========================");
+}
+
+void loop() {
+  // Задержка между измерениями (рекомендуется не менее 2 секунд)
+  delay(2000);
+  
+  // Чтение температуры и влажности
+  float humidity = dht.readHumidity();     // Чтение влажности
+  float temperature = dht.readTemperature(); // Чтение температуры в градусах Цельсия
+  
+  // Проверка на ошибки чтения
+  if (isnan(humidity) || isnan(temperature)) {
+    Serial.println("Ошибка чтения с датчика DHT11!");
+    return;
+  }
+  
+  // Вывод данных в Serial Monitor
+  Serial.print("Влажность: ");
+  Serial.print(humidity);
+  Serial.print("%\t");
+  
+  Serial.print("Температура: ");
+  Serial.print(temperature);
+  Serial.println("°C");
+  
+  // Дополнительная информация (опционально)
+  Serial.print("Точка росы: ");
+  Serial.print(dewPoint(temperature, humidity));
+  Serial.println("°C");
+  
+  // Графическое представление (для Serial Plotter)
+  Serial.print("Temp:");
+  Serial.print(temperature);
+  Serial.print(",Hum:");
+  Serial.print(humidity);
+  Serial.print(",Dew:");
+  Serial.println(dewPoint(temperature, humidity));
+  
+  Serial.println("----------------------");
+}
+
+// Функция для расчета точки росы
+double dewPoint(double temp, double hum) {
+  double a = 17.27;
+  double b = 237.7;
+  double gamma = ((a * temp) / (b + temp)) + log(hum / 100.0);
+  double dp = (b * gamma) / (a - gamma);
+  return dp;
+}
