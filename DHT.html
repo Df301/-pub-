@@ -55,10 +55,7 @@ void loop() {
   Serial.print(temperature);
   Serial.println("°C");
   
-  // Дополнительная информация (опционально)
-  Serial.print("Точка росы: ");
-  Serial.print(dewPoint(temperature, humidity));
-  Serial.println("°C");
+ 
   
   // Графическое представление (для Serial Plotter)
   Serial.print("Temp:");
