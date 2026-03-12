@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+#include <DHT.h>
+#include <LiquidCrystal.h>
+#define DHTPIN 5
+#define PIR_PIN 2
+#define LIGHT_PIN A0
+#define LED_PIN A5
+#define LIGHT_THRESHOLD 400
+DHT dht(DHTPIN, DHT11);
+LiquidCrystal lcd(4, 6, 10, 11, 12, 13);
+unsigned long lastMotionTime = 0;
+unsigned long lastSensorRead = 0;
+const unsigned long OFF_DELAY = 1000;
+const unsigned long READ_INTERVAL = 2000;
+void setup() {
+  dht.begin();
+  lcd.begin(16, 2);
+  pinMode(PIR_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+  lcd.print("System Ready");
+  delay(1000);
+  lcd.clear();
+}
+void loop() {
+  unsigned long now = millis();
+  if (now - lastSensorRead >= READ_INTERVAL) {
+    lastSensorRead = now;
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+    int lightLevel = analogRead(LIGHT_PIN);
+    if (isnan(h) || isnan(t)) {
+      lcd.clear();
+      lcd.print("DHT Error!");
+    } else {
+      lcd.setCursor(0, 0);
+      lcd.print("T:");
+      lcd.print(t, 1);
+      lcd.print("C H:");
+      lcd.print(h, 0);
+      lcd.print("%  "); 
+      lcd.setCursor(0, 1);
+      lcd.print("Light:");
+      lcd.print(1023 - lightLevel);
+      lcd.print("   ");
+    }
+  }
+  if (digitalRead(PIR_PIN) == HIGH) {
+  digitalWrite(LED_PIN, HIGH);
+  delay(1000);
+ 
+} else {
+  digitalWrite(LED_PIN, LOW);
+  
+
+}
+    }
